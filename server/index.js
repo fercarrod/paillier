@@ -1,40 +1,56 @@
-const { PaillierPublicKey, PaillierPrivateKey, PaillierKeyPair, generateKeys } = require('./paillier');
-
-// Función para cifrar y descifrar mensajes
-const testEncryptionDecryption = (publicKey, privateKey, message) => {
-  console.log('Mensaje original:', message);
-
-  // Cifrar el mensaje
-  const encryptedMessage = publicKey.encrypt(message);
-  console.log('Mensaje cifrado:', encryptedMessage.toString());
-
-  // Descifrar el mensaje
-  const decryptedMessage = privateKey.decrypt(encryptedMessage);
-  console.log('Mensaje descifrado:', decryptedMessage.toString());
-  console.log();
-};
-
-// Generar las claves
-const bitLength = 512; // Longitud en bits de los primos p y q
-generateKeys(bitLength)
-  .then((keyPair) => {
-    const publicKey = keyPair.publicKey;
-    const privateKey = keyPair.privateKey;
-
-    console.log('Clave pública (n, g):', publicKey.n.toString(), publicKey.g.toString());
-    console.log('Clave privada (lambda, mu):', privateKey.lambda.toString(), privateKey.mu.toString());
-    console.log();
-
-    // Probar cifrado y descifrado con diferentes mensajes
-    const message1 = 123456n;
-    testEncryptionDecryption(publicKey, privateKey, message1);
-
-    const message2 = 987654n;
-    testEncryptionDecryption(publicKey, privateKey, message2);
-
-    const message3 = 42n;
-    testEncryptionDecryption(publicKey, privateKey, message3);
-  })
-  .catch((error) => {
-    console.error('Error al generar las claves:', error);
+const paillierBigint = require('paillier-bigint')
+const app = require('express')()
+const http = require('http').Server(app)
+const io = require('socket.io')(http,{
+    cors: {
+        origin: true,
+        credentials: true,
+        methods: ["GET","POST"]
+    }
+})
+http.listen(3000,()=>{
+    console.log('escuchando puerto 3000')
+})
+io.on('connection', (socket) => {
+    console.log('Nuevo cliente conectado');
+  
+    socket.emit('mensaje', '¡Bienvenido al servidor Socket.IO!');
+  
+    socket.on('disconnect', () => {
+      console.log('Cliente desconectado');
+    });
+    socket.on('sendMessage',(msg)=>{
+      console.log(msg)
+    })
   });
+  
+
+async function paillierTest() {
+  
+  // (asynchronous) creation of a random private, public key pair for the Paillier cryptosystem
+  const { publicKey, privateKey } = await paillierBigint.generateRandomKeys(3072)
+  console.log('publicKey:',publicKey)  
+  console.log('privateKey:',privateKey)  
+  // Optionally, you can create your public/private keys from known parameters
+  // const publicKey = new paillierBigint.PublicKey(n, g)
+  // const privateKey = new paillierBigint.PrivateKey(lambda, mu, publicKey)
+
+  const m1 = 12345678901234567890n
+  const m2 = 5n
+
+  // encryption/decryption
+  const c1 = publicKey.encrypt(m1)
+  console.log(privateKey.decrypt(c1)) // 12345678901234567890n
+
+  // homomorphic addition of two ciphertexts (encrypted numbers)
+  const c2 = publicKey.encrypt(m2)
+  const encryptedSum = publicKey.addition(c1, c2)
+  console.log(privateKey.decrypt(encryptedSum)) // m1 + m2 = 12345678901234567895n
+
+  // multiplication by k
+  const k = 10n
+  const encryptedMul = publicKey.multiply(c1, k)
+  console.log(privateKey.decrypt(encryptedMul)) // k · m1 = 123456789012345678900n
+}
+
+paillierTest()

@@ -1,12 +1,13 @@
 const { PaillierPublicKey, PaillierPrivateKey, PaillierKeyPair, generateKeys } = require('./paillier');
+const bigintConversion = require('bigint-conversion');
 
 // Función para cifrar y descifrar mensajes
 const testEncryptionDecryption = (publicKey, privateKey, message) => {
-  console.log('Mensaje original:', message);
+  console.log('Mensaje original:', message.toString());
 
   // Cifrar el mensaje
   const encryptedMessage = publicKey.encrypt(message);
-  console.log('Mensaje cifrado:', encryptedMessage.toString());
+  console.log('Mensaje cifrado:', bigintConversion.bigintToHex(encryptedMessage));
 
   // Descifrar el mensaje
   const decryptedMessage = privateKey.decrypt(encryptedMessage);
@@ -26,13 +27,13 @@ generateKeys(bitLength)
     console.log();
 
     // Probar cifrado y descifrado con diferentes mensajes
-    const message1 = 123456n;
+    const message1 = bigintConversion.hexToBigint('123456');
     testEncryptionDecryption(publicKey, privateKey, message1);
 
-    const message2 = 987654n;
+    const message2 = bigintConversion.hexToBigint('987654');
     testEncryptionDecryption(publicKey, privateKey, message2);
 
-    const message3 = 42n;
+    const message3 = bigintConversion.hexToBigint('2a');
     testEncryptionDecryption(publicKey, privateKey, message3);
   })
   .catch((error) => {
