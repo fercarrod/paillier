@@ -1,1 +1,25 @@
-<button (click)="sendMessage()">Enviar Mensaje</button>
+
+<div>
+  <h3>Enviar Msg Prueba Comunicación C-S</h3>
+  <button (click)="sendMessage()">Enviar</button>
+</div>
+
+<div>
+  <h3>Enviar mensaje encriptado</h3>
+  <input type="text" [(ngModel)]="message" placeholder="Ingrese el texto">
+  <button (click)="sendEncriptado()">Enviar</button>
+</div>
+
+<div>
+  <h3>Enviar msg combiandos Suma</h3>
+  <input type="text" [(ngModel)]="textbox1" placeholder="Texto 1">
+  <input type="text" [(ngModel)]="textbox2" placeholder="Texto 2">
+  <button (click)="enviarSuma()">Enviar</button>
+</div>
+
+<div>
+  <h3>Enviar msg combiandos Multi</h3>
+  <input type="text" [(ngModel)]="textbox1" placeholder="Texto 1">
+
+  <button (click)="enviarMulti()">Enviar</button>
+</div>

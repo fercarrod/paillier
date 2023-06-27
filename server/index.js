@@ -1,4 +1,5 @@
 const paillierBigint = require('paillier-bigint')
+const bigintConversion = require('bigint-conversion')
 const app = require('express')()
 const http = require('http').Server(app)
 const io = require('socket.io')(http,{
@@ -8,14 +9,63 @@ const io = require('socket.io')(http,{
         methods: ["GET","POST"]
     }
 })
+let llavePUBServer;
+let llavePRIVServer;
+
+paillierTest();
+
+async function paillierTest() {
+  const { publicKey, privateKey } = await paillierBigint.generateRandomKeys(16);
+  llavePUBServer = publicKey;
+  llavePRIVServer = privateKey
+  console.log('Clave pública generada:', publicKey);
+  console.log('Clave privada generada:', privateKey);
+  console.log('llavePUBServer:', llavePUBServer);
+  console.log('llavePRIVServer:', llavePUBServer);
+}
+console.log('llavePUBServer:',llavePUBServer)
+
 http.listen(3000,()=>{
     console.log('escuchando puerto 3000')
 })
 io.on('connection', (socket) => {
     console.log('Nuevo cliente conectado');
   
-    socket.emit('mensaje', '¡Bienvenido al servidor Socket.IO!');
-  
+    if (llavePUBServer) {//solo se emite la llave si existe
+      const publicKeyObject = {
+        n: llavePUBServer.n.toString(),
+        _n2: llavePUBServer._n2.toString(),
+        g: llavePUBServer.g.toString()
+      };
+      const publicKeyString = JSON.stringify(publicKeyObject);
+      socket.emit('publicKey', publicKeyString);
+    } else {
+      console.log('Clave pública no generada');
+    }
+    socket.on('enviarMsgEncriptado',(msgRecibido)=>{
+      console.log(msgRecibido)
+      const msgRecibidoBigint = BigInt(msgRecibido)
+      console.log(msgRecibidoBigint)
+      const desencriptado = llavePRIVServer.decrypt(msgRecibidoBigint)
+      console.log('desencriptado:',desencriptado)
+      const desencriptadoaText = bigintConversion.bigintToText(desencriptado)
+      console.log(desencriptadoaText)
+    })
+    socket.on('enviarCombinadoSuma',(msgCombinadoRecibido)=>{
+      //console.log(msgCombinadoRecibido)
+      const msgRecibidoBigint = BigInt(msgCombinadoRecibido)
+      console.log(msgRecibidoBigint)
+      const desencriptado = llavePRIVServer.decrypt(msgRecibidoBigint)
+      console.log('desencriptado:',desencriptado)
+   
+    })
+    socket.on('enviarCombinadoMulti',(msgCombinadoRecibido)=>{
+      //console.log(msgCombinadoRecibido)
+      const msgRecibidoBigint = BigInt(msgCombinadoRecibido)
+      console.log(msgRecibidoBigint)
+      const desencriptado = llavePRIVServer.decrypt(msgRecibidoBigint)
+      console.log('desencriptado:',desencriptado)
+    })
     socket.on('disconnect', () => {
       console.log('Cliente desconectado');
     });
@@ -25,32 +75,6 @@ io.on('connection', (socket) => {
   });
   
 
-async function paillierTest() {
-  
-  // (asynchronous) creation of a random private, public key pair for the Paillier cryptosystem
-  const { publicKey, privateKey } = await paillierBigint.generateRandomKeys(3072)
-  console.log('publicKey:',publicKey)  
-  console.log('privateKey:',privateKey)  
-  // Optionally, you can create your public/private keys from known parameters
-  // const publicKey = new paillierBigint.PublicKey(n, g)
-  // const privateKey = new paillierBigint.PrivateKey(lambda, mu, publicKey)
 
-  const m1 = 12345678901234567890n
-  const m2 = 5n
 
-  // encryption/decryption
-  const c1 = publicKey.encrypt(m1)
-  console.log(privateKey.decrypt(c1)) // 12345678901234567890n
 
-  // homomorphic addition of two ciphertexts (encrypted numbers)
-  const c2 = publicKey.encrypt(m2)
-  const encryptedSum = publicKey.addition(c1, c2)
-  console.log(privateKey.decrypt(encryptedSum)) // m1 + m2 = 12345678901234567895n
-
-  // multiplication by k
-  const k = 10n
-  const encryptedMul = publicKey.multiply(c1, k)
-  console.log(privateKey.decrypt(encryptedMul)) // k · m1 = 123456789012345678900n
-}
-
-paillierTest()
