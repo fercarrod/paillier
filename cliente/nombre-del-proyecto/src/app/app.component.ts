@@ -16,6 +16,7 @@ export class AppComponent {
   textbox1=''
   textbox2=''
   textbox3=''
+  textbox4=''
   constructor(private socketService: SocketService) {}
 
   ngOnInit() {
@@ -69,7 +70,10 @@ export class AppComponent {
     console.log(this.textbox2);
     const msgparaEncriptar1 = bigintConversion.textToBigint(this.textbox1)
     const msgparaEncriptar2 = bigintConversion.textToBigint(this.textbox2)
-
+    const SumaEncriptados =msgparaEncriptar1 + msgparaEncriptar2 //sumamos el valor de los numeros en bigint
+    console.log('texto1abg',msgparaEncriptar1)
+    console.log('texto2abg',msgparaEncriptar2)
+    console.log('suma de los textos en bigint',SumaEncriptados)
     const llavePUBServerJSON = localStorage.getItem('llavePUBServer');
     if(llavePUBServerJSON){
     const llaveParse = JSON.parse(llavePUBServerJSON)
@@ -81,20 +85,28 @@ export class AppComponent {
     const msgEncriptado2 = llavePUBServer.encrypt(msgparaEncriptar2)//encriptamos el msg1
     console.log('encriptao1',msgEncriptado1)
     console.log('encriptao2',msgEncriptado2)
-    const msgCombinados =llavePUBServer.addition(msgEncriptado1,msgEncriptado2)
+    const msgCombinados =llavePUBServer.addition(msgEncriptado1,msgEncriptado2)//sumamos los msg encriptados 1 y 2
     console.log('msgCombinados',msgCombinados)
     //evento socket para enviar el msg
     const msgaEnviarCombinado = msgCombinados.toString()
+    //prueba
+    const mensajesEncriptadosSumados = {
+      SumaEncriptados: SumaEncriptados.toString(),
+      msgCombinados: msgCombinados.toString()
+    }
     console.log('a string:',msgaEnviarCombinado)
-    this.socketService.io.emit('enviarCombinadoSuma',msgaEnviarCombinado)
+    this.socketService.io.emit('enviarCombinadoSuma',mensajesEncriptadosSumados)
   }else{console.log('error al recuperar llave')}
   }
   enviarMulti(){
-    console.log(this.textbox1);
+    console.log(this.textbox3);
 
-    const msgparaEncriptar1 = bigintConversion.textToBigint(this.textbox1)
-    const k = 10n
-
+    const msgparaEncriptar1 = bigintConversion.textToBigint(this.textbox3)
+    const k = bigintConversion.textToBigint(this.textbox4)
+    const multiplicacionBigints =msgparaEncriptar1*k
+    console.log('texto a bg',bigintConversion.textToBigint(this.textbox3))
+    console.log('numero a bg',bigintConversion.textToBigint(this.textbox4))
+    console.log('multi directa',multiplicacionBigints)
     const llavePUBServerJSON = localStorage.getItem('llavePUBServer');
     if(llavePUBServerJSON){
     const llaveParse = JSON.parse(llavePUBServerJSON)
@@ -106,12 +118,15 @@ export class AppComponent {
 
     console.log('encriptao1',msgEncriptado1)
 
-    const msgCombinados =llavePUBServer.multiply(msgEncriptado1,k)
-    console.log('msgCombinados',msgCombinados)
+    const Multiplicado =llavePUBServer.multiply(msgEncriptado1,k)
+    console.log('Multiplicado',Multiplicado)
     //evento socket para enviar el msg
-    const msgaEnviarCombinado = msgCombinados.toString()
-    console.log('a string:',msgaEnviarCombinado)
-    this.socketService.io.emit('enviarCombinadoMulti',msgaEnviarCombinado)
+    const mensajesEncriptadoMulti = {
+      k: k.toString(),
+      multiplicacionBigints: multiplicacionBigints.toString(),
+      Multiplicado: Multiplicado.toString()
+    }
+    this.socketService.io.emit('enviarCombinadoMulti',mensajesEncriptadoMulti)
   }else{console.log('error al recuperar llave')}
   }
 

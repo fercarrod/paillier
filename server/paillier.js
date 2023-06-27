@@ -3,8 +3,8 @@ const bigintConversion = require('bigint-conversion');
 
 class PaillierPublicKey {
   constructor(n, g) {
-    this.n = n; // módulo
-    this.g = g; // generador
+    this.n = n; 
+    this.g = g; 
   }
 
   encrypt(m) {
